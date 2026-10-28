@@ -3,10 +3,13 @@ import { useState } from 'react';
 import './App.css';
 import Navbar from './components/Navbar';
 
+import Timetable from "./components/Timetable";
+
+
 const MAX_CREDITS = 18;
 const MAX_ACTIVITIES = 5;
 
-const student = {
+const initialStudent = {
   name: 'Yenus Bahta',
   department: 'Computer Science and Engineering',
   year: '3rd Year',
@@ -28,9 +31,101 @@ const initialCourses = [
 ];
 
 function App() {
+  const [student, setStudent] = useState(() => {
+    try {
+      const savedStudent = localStorage.getItem('campusConnectStudent');
+
+      if (savedStudent) {
+        const parsedStudent = JSON.parse(savedStudent);
+
+        if (
+          parsedStudent &&
+          typeof parsedStudent.name === 'string' &&
+          typeof parsedStudent.department === 'string' &&
+          typeof parsedStudent.year === 'string' &&
+          typeof parsedStudent.studentId === 'string' &&
+          typeof parsedStudent.email === 'string'
+        ) {
+          return { ...initialStudent, ...parsedStudent };
+        }
+      }
+    } catch {
+      // Use the sample profile if saved data is invalid.
+    }
+
+    return initialStudent;
+  });
+
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState(student);
+  const [profileMessage, setProfileMessage] = useState('');
+
   const [searchTerm, setSearchTerm] = useState('');
   const [creditFilter, setCreditFilter] = useState('all');
   const [registrationMessage, setRegistrationMessage] = useState('');
+
+  function handleProfileInput(event) {
+    const { name, value } = event.target;
+
+    setProfileForm((currentProfile) => ({
+      ...currentProfile,
+      [name]: value,
+    }));
+  }
+
+  function handleProfileEdit() {
+    setProfileForm(student);
+    setProfileMessage('');
+    setIsEditingProfile(true);
+  }
+
+  function handleProfileCancel() {
+    setProfileForm(student);
+    setProfileMessage('');
+    setIsEditingProfile(false);
+  }
+
+  function handleProfileSave(event) {
+    event.preventDefault();
+
+    const updatedProfile = {
+      ...student,
+      name: profileForm.name.trim(),
+      department: profileForm.department.trim(),
+      year: profileForm.year.trim(),
+      studentId: profileForm.studentId.trim(),
+      email: profileForm.email.trim(),
+      university: profileForm.university.trim(),
+    };
+
+    if (
+      !updatedProfile.name ||
+      !updatedProfile.department ||
+      !updatedProfile.year ||
+      !updatedProfile.studentId ||
+      !updatedProfile.email ||
+      !updatedProfile.university
+    ) {
+      setProfileMessage('Please complete all profile fields.');
+      return;
+    }
+
+    try {
+      localStorage.setItem(
+        'campusConnectStudent',
+        JSON.stringify(updatedProfile)
+      );
+
+      setStudent(updatedProfile);
+      setProfileForm(updatedProfile);
+      setProfileMessage('Profile saved on this device.');
+      setIsEditingProfile(false);
+    } catch {
+      setProfileMessage(
+        'Could not save the profile in this browser. Please try again.'
+      );
+    }
+  }
 
   const [registeredCourses, setRegisteredCourses] = useState(() => {
     try {
@@ -152,12 +247,14 @@ function App() {
     );
   }
 
-  const filteredCourses = initialCourses.filter((course) => {
-    const search = searchTerm.toLowerCase().trim();
+  function handleSearch(event) {
+    setSearchTerm(event.target.value);
+  }
 
+  const filteredCourses = initialCourses.filter((course) => {
     const matchesSearch =
-      course.name.toLowerCase().includes(search) ||
-      course.code.toLowerCase().includes(search);
+      course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.name.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesCredits =
       creditFilter === 'all' ||
@@ -166,264 +263,266 @@ function App() {
     return matchesSearch && matchesCredits;
   });
 
+  const initials = student.name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('');
+
   return (
     <div className="app">
       <Navbar />
+      <Timetable />
 
-      <main className="dashboard" id="dashboard">
+      <main className="dashboard">
         <section className="welcome-section">
-          <p className="semester-label">YOUR ACADEMIC SPACE</p>
-          <h1>Welcome back, {student.name.split(' ')[0]}! 👋</h1>
-          <p>
-            Stay organized, manage your courses, and keep moving
-            toward your academic goals.
-          </p>
-
-          <div className="semester-info">
-            <span>Current semester</span>
-            <strong>Semester 1 · Demo</strong>
-          </div>
-        </section>
-
-        <section className="student-profile" aria-label="Student profile">
-          <div className="profile-avatar" aria-hidden="true">
-            {student.name
-              .split(' ')
-              .map((part) => part[0])
-              .join('')}
-          </div>
-
-          <div className="profile-details">
-            <p className="profile-label">STUDENT PROFILE</p>
-            <h2>{student.name}</h2>
-            <p className="profile-department">{student.department}</p>
-
-            <div className="profile-meta">
-              <span>
-                <span aria-hidden="true">🎓</span> {student.year}
-              </span>
-              <span>
-                <span aria-hidden="true">🏫</span> ASTU
-              </span>
-              <span>
-                <span aria-hidden="true">🆔</span> {student.studentId}
-              </span>
-            </div>
-
-            <p className="profile-email">
-              <span aria-hidden="true">✉</span> {student.email}
+          <div>
+            <p className="section-eyebrow">STUDENT PORTAL</p>
+            <h1>Welcome back, {student.name}!</h1>
+            <p className="section-description">
+              Manage your academic profile, courses, and registration
+              in one place.
             </p>
-
-            <p className="profile-university">{student.university}</p>
-          </div>
-
-          <div className="profile-status">
-            <span className="profile-status-dot" />
-            Demo Profile
           </div>
         </section>
 
-        <section className="summary-cards" aria-label="Academic summary">
+        <section className="summary-grid">
           <article className="summary-card">
-            <div className="summary-card-heading">
-              <span className="summary-icon courses-icon" aria-hidden="true">
-                📚
-              </span>
-              <span className="summary-card-label">Enrolled Courses</span>
-            </div>
-            <p className="summary-number">{myCourses.length}</p>
-            <p className="summary-description">
-              Your registered courses
-            </p>
+            <p className="summary-label">Registered Courses</p>
+            <h2>{myCourses.length}</h2>
+            <p className="summary-detail">Courses this semester</p>
           </article>
 
           <article className="summary-card">
-            <div className="summary-card-heading">
-              <span className="summary-icon credits-icon" aria-hidden="true">
-                📊
-              </span>
-              <span className="summary-card-label">Registered Credits</span>
-            </div>
-
-            <p className="summary-number">
-              {registeredCredits}
-              <span className="number-limit"> / {MAX_CREDITS}</span>
+            <p className="summary-label">Registered Credits</p>
+            <h2>{registeredCredits}</h2>
+            <p className="summary-detail">
+              Out of {MAX_CREDITS} maximum credits
             </p>
-
-            <p className="summary-description">
-              Maximum demo credit limit
-            </p>
-
             <div
-              className="credit-progress-track"
+              className="progress-track"
               role="progressbar"
-              aria-label="Registered credit progress"
+              aria-label="Registered credits"
+              aria-valuenow={registeredCredits}
               aria-valuemin={0}
               aria-valuemax={MAX_CREDITS}
-              aria-valuenow={registeredCredits}
             >
               <div
-                className="credit-progress-fill"
+                className="progress-fill"
                 style={{ width: `${creditProgress}%` }}
               />
             </div>
-
-            <p className="progress-caption">
-              {Math.round(creditProgress)}% of demo limit used
-            </p>
           </article>
 
           <article className="summary-card">
-            <div className="summary-card-heading">
-              <span className="summary-icon gpa-icon" aria-hidden="true">
-                ⭐
-              </span>
-              <span className="summary-card-label">Current GPA</span>
-            </div>
-            <p className="summary-number">3.75</p>
-            <p className="summary-description">Out of 4.00 · Sample value</p>
+            <p className="summary-label">Academic Year</p>
+            <h2>{student.year}</h2>
+            <p className="summary-detail">{student.department}</p>
+          </article>
+
+          <article className="summary-card">
+            <p className="summary-label">Available Courses</p>
+            <h2>{initialCourses.length - myCourses.length}</h2>
+            <p className="summary-detail">Not currently registered</p>
           </article>
         </section>
 
-        <section
-          className="courses-section activity-section"
-          id="recent-activity"
-        >
-          <div className="section-heading-row">
+        <section className="profile-section">
+          <div className="section-heading">
             <div>
-              <p className="section-eyebrow">YOUR LATEST UPDATES</p>
-              <h2>Recent Activity</h2>
+              <p className="section-eyebrow">YOUR INFORMATION</p>
+              <h2>Student Profile</h2>
               <p className="section-description">
-                Keep track of your latest course actions.
+                View and update your personal and academic information.
               </p>
             </div>
 
-            <span className="activity-count">
-              {recentActivity.length} / {MAX_ACTIVITIES}
-            </span>
+            <button
+              type="button"
+              className="course-button"
+              onClick={handleProfileEdit}
+            >
+              Edit Profile
+            </button>
           </div>
 
-          {recentActivity.length === 0 ? (
-            <div className="empty-state">
-              <span className="empty-state-icon" aria-hidden="true">
-                🗓️
-              </span>
-              <h3>No activity yet</h3>
-              <p>
-                Register for or drop a course to see your recent
-                activity here.
-              </p>
-            </div>
-          ) : (
-            <div className="activity-list">
-              {recentActivity.map((activity) => (
-                <article className="activity-item" key={activity.id}>
-                  <div
-                    className={`activity-icon ${
-                      activity.type === 'drop'
-                        ? 'activity-icon-drop'
-                        : 'activity-icon-register'
-                    }`}
-                    aria-hidden="true"
-                  >
-                    {activity.type === 'drop' ? '−' : '✓'}
-                  </div>
-
-                  <div className="activity-content">
-                    <h3>{activity.message}</h3>
-                    <p>
-                      {new Date(activity.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-
-                  <span
-                    className={`activity-type ${
-                      activity.type === 'drop'
-                        ? 'activity-type-drop'
-                        : 'activity-type-register'
-                    }`}
-                  >
-                    {activity.type === 'drop' ? 'Dropped' : 'Registered'}
-                  </span>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="courses-section" id="my-courses">
-          <div className="section-heading-row">
-            <div>
-              <p className="section-eyebrow">YOUR LEARNING</p>
-              <h2>My Courses</h2>
-              <p className="section-description">
-                Manage the courses you are currently registered for.
-              </p>
-            </div>
-            <span className="section-count">{myCourses.length} courses</span>
-          </div>
-
-          {myCourses.length === 0 ? (
-            <p className="no-results">
-              You have not registered for any courses yet.
-              Visit the course catalog below to get started.
+          {profileMessage && (
+            <p className="profile-message" role="status">
+              {profileMessage}
             </p>
-          ) : (
-            <div className="course-list">
-              {myCourses.map((course) => (
-                <article className="course-card" key={course.code}>
-                  <div className="course-card-info">
-                    <p className="course-code">{course.code}</p>
-                    <h3>{course.name}</h3>
-                    <p className="course-credits">
-                      {course.credits} credits
-                    </p>
-                  </div>
+          )}
 
-                  <button
-                    className="course-button drop-button"
-                    onClick={() => handleRegistration(course.code)}
-                  >
-                    Drop Course
-                  </button>
-                </article>
-              ))}
+          <div className="profile-card">
+            <div className="profile-avatar" aria-hidden="true">
+              {initials || 'S'}
             </div>
+
+            <div className="profile-details">
+              <h3>{student.name}</h3>
+              <p>{student.department}</p>
+
+              <div className="profile-info-grid">
+                <div>
+                  <span>Student ID</span>
+                  <strong>{student.studentId}</strong>
+                </div>
+
+                <div>
+                  <span>Academic Year</span>
+                  <strong>{student.year}</strong>
+                </div>
+
+                <div>
+                  <span>Email</span>
+                  <strong>{student.email}</strong>
+                </div>
+
+                <div>
+                  <span>University</span>
+                  <strong>{student.university}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {isEditingProfile && (
+            <form
+              className="profile-edit-form"
+              onSubmit={handleProfileSave}
+            >
+              <div className="section-heading">
+                <div>
+                  <h3>Edit Your Profile</h3>
+                  <p className="section-description">
+                    Update the fields below and save your changes.
+                  </p>
+                </div>
+              </div>
+
+              <div className="profile-form-grid">
+                <label className="profile-field">
+                  <span>Full Name</span>
+                  <input
+                    type="text"
+                    name="name"
+                    value={profileForm.name}
+                    onChange={handleProfileInput}
+                    required
+                  />
+                </label>
+
+                <label className="profile-field">
+                  <span>Department</span>
+                  <input
+                    type="text"
+                    name="department"
+                    value={profileForm.department}
+                    onChange={handleProfileInput}
+                    required
+                  />
+                </label>
+
+                <label className="profile-field">
+                  <span>Academic Year</span>
+                  <input
+                    type="text"
+                    name="year"
+                    value={profileForm.year}
+                    onChange={handleProfileInput}
+                    required
+                  />
+                </label>
+
+                <label className="profile-field">
+                  <span>Student ID</span>
+                  <input
+                    type="text"
+                    name="studentId"
+                    value={profileForm.studentId}
+                    onChange={handleProfileInput}
+                    required
+                  />
+                </label>
+
+                <label className="profile-field">
+                  <span>University Email</span>
+                  <input
+                    type="email"
+                    name="email"
+                    value={profileForm.email}
+                    onChange={handleProfileInput}
+                    required
+                  />
+                </label>
+
+                <label className="profile-field">
+                  <span>University</span>
+                  <input
+                    type="text"
+                    name="university"
+                    value={profileForm.university}
+                    onChange={handleProfileInput}
+                    required
+                  />
+                </label>
+              </div>
+
+              {profileMessage && (
+                <p role="alert">{profileMessage}</p>
+              )}
+
+              <div className="profile-form-actions">
+                <button type="submit" className="course-button">
+                  Save Profile
+                </button>
+
+                <button
+                  type="button"
+                  className="drop-button"
+                  onClick={handleProfileCancel}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           )}
         </section>
 
-        <section className="courses-section" id="course-catalog">
-          <div className="section-heading-row">
+        <section className="courses-section">
+          <div className="section-heading">
             <div>
-              <p className="section-eyebrow">EXPLORE YOUR OPTIONS</p>
-              <h2>Course Catalog</h2>
+              <p className="section-eyebrow">ACADEMIC REGISTRATION</p>
+              <h2>Course Registration</h2>
               <p className="section-description">
-                Find courses and manage your registrations.
+                Search courses, check credit values, and register or drop
+                courses.
               </p>
             </div>
-            <span className="section-count">
-              {filteredCourses.length} results
-            </span>
           </div>
+
+          {registrationMessage && (
+            <p className="registration-message" role="status">
+              {registrationMessage}
+            </p>
+          )}
 
           <div className="course-controls">
-            <div className="search-wrapper">
-              <span aria-hidden="true">⌕</span>
-              <input
-                className="course-search"
-                type="text"
-                placeholder="Search by course name or code..."
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                aria-label="Search courses by name or code"
-              />
-            </div>
+            <input
+              type="search"
+              className="course-search"
+              placeholder="Search by course code or name..."
+              value={searchTerm}
+              onChange={handleSearch}
+              aria-label="Search courses"
+            />
 
             <select
               className="credit-filter"
               value={creditFilter}
               onChange={(event) => setCreditFilter(event.target.value)}
-              aria-label="Filter courses by credits"
+              aria-label="Filter by credits"
             >
               <option value="all">All credits</option>
               <option value="3">3 credits</option>
@@ -431,64 +530,84 @@ function App() {
             </select>
           </div>
 
-          {registrationMessage && (
-            <p
-              className="registration-message"
-              role="status"
-              aria-live="polite"
-            >
-              <span aria-hidden="true">●</span> {registrationMessage}
-            </p>
-          )}
-
-          {filteredCourses.length === 0 ? (
-            <p className="no-results">
-              No courses found. Try changing your search or filter.
-            </p>
-          ) : (
-            <div className="course-list">
-              {filteredCourses.map((course) => {
-                const isRegistered = registeredCourses.includes(course.code);
+          <div className="course-list">
+            {filteredCourses.length === 0 ? (
+              <p className="empty-state">
+                No courses match your search.
+              </p>
+            ) : (
+              filteredCourses.map((course) => {
+                const isRegistered = registeredCourses.includes(
+                  course.code
+                );
 
                 return (
                   <article className="course-card" key={course.code}>
                     <div className="course-card-info">
-                      <p className="course-code">{course.code}</p>
+                      <span className="course-code">{course.code}</span>
                       <h3>{course.name}</h3>
-                      <p className="course-credits">
-                        {course.credits} credits
-                      </p>
-                      <p
-                        className={
-                          isRegistered
-                            ? 'status-registered'
-                            : 'status-available'
-                        }
-                      >
-                        {isRegistered ? '✓ Registered' : 'Available'}
-                      </p>
+                      <p>{course.credits} credits</p>
                     </div>
 
                     <button
+                      type="button"
                       className={
-                        isRegistered
-                          ? 'course-button drop-button'
-                          : 'course-button'
+                        isRegistered ? 'drop-button' : 'course-button'
                       }
                       onClick={() => handleRegistration(course.code)}
                     >
-                      {isRegistered ? 'Drop Course' : '＋ Register'}
+                      {isRegistered ? 'Drop Course' : 'Register'}
                     </button>
                   </article>
                 );
-              })}
+              })
+            )}
+          </div>
+        </section>
+
+        <section className="activity-section">
+          <div className="section-heading">
+            <div>
+              <p className="section-eyebrow">YOUR LATEST ACTIONS</p>
+              <h2>Recent Activity</h2>
+              <p className="section-description">
+                A record of your recent course registration changes.
+              </p>
+            </div>
+          </div>
+
+          {recentActivity.length === 0 ? (
+            <p className="empty-state">
+              No recent activity yet. Register or drop a course to see
+              your activity here.
+            </p>
+          ) : (
+            <div className="activity-list">
+              {recentActivity.map((activity) => (
+                <article className="activity-item" key={activity.id}>
+                  <div className="activity-icon" aria-hidden="true">
+                    {activity.type === 'drop' ? '−' : '+'}
+                  </div>
+
+                  <div className="activity-details">
+                    <p>{activity.message}</p>
+                    <span>
+                      {new Date(activity.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                </article>
+              ))}
             </div>
           )}
         </section>
 
         <footer className="dashboard-footer">
-          <span className="footer-brand">CampusConnect</span>
-          <span>Student Portal · Frontend Demo</span>
+          <p>
+            CampusConnect · Student Portal
+          </p>
+          <p>
+            {student.university}
+          </p>
         </footer>
       </main>
     </div>
