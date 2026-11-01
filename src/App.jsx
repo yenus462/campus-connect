@@ -6,6 +6,8 @@ import Navbar from './components/Navbar';
 import Timetable from "./components/Timetable";
 
 import Assignments from "./components/Assignments";
+import Announcements from "./components/Announcements";
+import SemesterInfo from "./components/SemesterInfo";
 
 
 
@@ -279,6 +281,9 @@ function App() {
       <Navbar />
       <Timetable />
       <Assignments />
+      <Announcements />
+      <SemesterInfo />
+
 
       <main className="dashboard">
         <section className="welcome-section">

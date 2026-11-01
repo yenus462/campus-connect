@@ -1,0 +1,139 @@
+
+.semester-section {
+  margin-top: 30px;
+  padding: 25px;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 14px;
+}
+
+.semester-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 22px;
+}
+
+.semester-header h2 {
+  margin: 0 0 7px;
+  color: var(--text-color, #1f2937);
+  font-size: 22px;
+}
+
+.semester-header p {
+  margin: 0;
+  color: var(--secondary-text, #6b7280);
+  font-size: 14px;
+}
+
+.semester-badge {
+  padding: 8px 13px;
+  background: #e8efff;
+  color: #2563eb;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.semester-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 28px;
+}
+
+.semester-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 17px;
+  background: var(--secondary-bg, #f8fafc);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+}
+
+.semester-icon {
+  font-size: 27px;
+}
+
+.semester-stat-card p {
+  margin: 0 0 7px;
+  color: var(--secondary-text, #6b7280);
+  font-size: 12px;
+}
+
+.semester-stat-card h3 {
+  margin: 0;
+  color: var(--text-color, #1f2937);
+  font-size: 16px;
+}
+
+.semester-dates h3 {
+  margin: 0 0 17px;
+  color: var(--text-color, #1f2937);
+  font-size: 18px;
+}
+
+.semester-date-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.semester-date-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 10px;
+}
+
+.date-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e8efff;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.semester-date-item h4 {
+  margin: 0 0 5px;
+  color: var(--text-color, #1f2937);
+  font-size: 14px;
+}
+
+.semester-date-item p {
+  margin: 0;
+  color: var(--secondary-text, #6b7280);
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .semester-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .semester-section {
+    padding: 16px;
+  }
+
+  .semester-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .semester-stats,
+  .semester-date-list {
+    grid-template-columns: 1fr;
+  }
+}
