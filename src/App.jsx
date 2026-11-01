@@ -5,6 +5,9 @@ import Navbar from './components/Navbar';
 
 import Timetable from "./components/Timetable";
 
+import Assignments from "./components/Assignments";
+
+
 
 const MAX_CREDITS = 18;
 const MAX_ACTIVITIES = 5;
@@ -275,6 +278,7 @@ function App() {
     <div className="app">
       <Navbar />
       <Timetable />
+      <Assignments />
 
       <main className="dashboard">
         <section className="welcome-section">
